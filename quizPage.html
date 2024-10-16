@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="quizPage.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container">
+      <div>
+        <header class="container-header">
+          <section class="container__header-topic">
+            <p class="header-topic">Topic: Computer Science</p>
+            <p class="header-score">Score: 0</p>
+          </section>
+          <section class="container__header-time">
+            <p class="header-time">Question time: 59 seconds</p>
+            <p class="header-total-time">Quiz total time: 4.59 seconds</p>
+          </section>
+        </header>
+
+        <main>
+          <!-- form to hold quiz questions -->
+          <form id="quiz-form">
+            <!-- question 1 -->
+            <article class="quiz-question">
+              <fieldset class="container-fieldset">
+                <legend>1</legend>
+                <p class="question">
+                  What does the Prt Sc button do What does the Prt Sc button do?
+                </p>
+                <div class="container-answers">
+                  <fieldset class="answer-option__fieldset">
+                    <legend>A:</legend>
+                    <label for="answer1a">
+                      <input
+                        type="radio"
+                        name="question1"
+                        id="answer1a"
+                        value="Captures what's on the screen and copies it to your clipboard"
+                      />
+                      Captures what's on the screen and copies it to your
+                      clipboard
+                    </label>
+                  </fieldset>
+                  <fieldset class="answer-option__fieldset">
+                    <legend>B:</legend>
+                    <label for="answer1b">
+                      <input
+                        type="radio"
+                        name="question1"
+                        id="answer1b"
+                        value="Nothing"
+                      />
+                      Nothing
+                    </label>
+                  </fieldset>
+                  <fieldset class="answer-option__fieldset">
+                    <legend>C:</legend>
+                    <label for="answer1c">
+                      <input
+                        type="radio"
+                        name="question1"
+                        id="answer1c"
+                        value="Saves a .png file of what's on the screen in your screenshots folder in photos"
+                      />
+                      Saves a .png file of what's on the screen in your
+                      screenshots folder in photos
+                    </label>
+                  </fieldset>
+                  <fieldset class="answer-option__fieldset">
+                    <legend>D:</legend>
+                    <label for="answer1d">
+                      <input
+                        type="radio"
+                        name="question1"
+                        id="answer1d"
+                        value="Closes all windows"
+                      />
+                      Closes all windows
+                    </label>
+                  </fieldset>
+                </div>
+              </fieldset>
+            </article>
+
+            <!-- submit button -->
+             <button class="submit-btn" type="submit">Next</button>
+          </form>
+        </main>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
