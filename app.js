@@ -4,7 +4,9 @@ const quizForm = document.querySelector("#quiz-form");
 /* const answerContainers = document.querySelectorAll('.container-answers fieldset'); */
 
 let questions = [];
-let currentQuetionIndex = 0; // start index to track the current question
+let currentQuestionIndex = 0; // start index to track the current question
+
+const questionCounter = document.querySelector("#questionCounter");
 
 const getQuizData = () => {
   const url =
@@ -45,107 +47,143 @@ const getQuizData = () => {
       // store the 5 shuffled selected questions into the questions array
       questions = selectedQuestions;
 
+      // max number of questions after loading the selected questions
+      const MAX_QUESTIONS = questions.length;
+      console.log("maxxxx questions: ", MAX_QUESTIONS);
+      updateQuestionCounter(currentQuestionIndex + 1, MAX_QUESTIONS);
+
       console.log("shuffled questions: ", shuffledQuestions);
       console.log("selected 5 random questions: ", selectedQuestions);
 
-      displayQuestion(currentQuetionIndex); // display the first question
+      displayQuestion(currentQuestionIndex); // display the first question
     })
     .catch((error) => {
       console.error("Fetch error:", error); // catch and log any errors
     });
 };
 
-// function displaying next question along with its answers
-const displayQuestion = (index) => {
-  const questionData = questions[index]; // get the current question by index from questions arr; the 5 shuffled questions
-  const answers = [
-    ...questionData.incorrectAnswers,
-    questionData.correctAnswer,
-  ]; // combine incorrect and correct answers into an array using spread operator
-
-  console.log("qustion data: ", questionData);
-  // shuffle the answers for randomness
-  const shuffledAnswers = answers.sort(() => Math.random() - 0.5);
-
-  // update the question text into the DOM
-  question.textContent = questionData.question;
-
-   // Reset the checked status of radio buttons for the current question
-  const currentQuestionRadioButtons = quizForm.querySelectorAll(`input[name="question${index}"]`);
-  currentQuestionRadioButtons.forEach(input => {
-    input.checked = false; // Uncheck each radio button for this question
-  });
-
-  // update the answer options
-  const answerContainers = document.querySelectorAll(
-    ".container-answers fieldset"
-  );
-  answerContainers.forEach((fieldset, index) => {
-    const input = fieldset.querySelector("input");
-    const label = fieldset.querySelector("label");
-
-    input.value = shuffledAnswers[index]; // assign new answers
-    label.lastChild.textContent = ` ${shuffledAnswers[index]}`;
-  });
-
+const updateQuestionCounter = (currentQuestion, maxQuestions) => {
+  const questionCounterElement = document.getElementById("questionCounter");
+  questionCounterElement.innerHTML = `Question: ${currentQuestion}/${maxQuestions}`;
 };
 
-// function to handle form submition
+// function to handle form submission
 quizForm.addEventListener("submit", function (event) {
   event.preventDefault(); // prevent form from reloading the page
 
+  // Clear feedback classes first, to ensure they don't carry over between questions
+  removeFeedbackClasses();
+
   // get the selected answer
   const selectedAnswer = quizForm.querySelector(
-    'input[name="question1"]:checked'
+    `input[name="question${currentQuestionIndex}"]:checked`
   );
 
   if (selectedAnswer) {
     // if there is a selected answer; user checked a radio button
     const userAnswer = selectedAnswer.value;
-    const correctAnswer = questions[currentQuetionIndex].correctAnswer;
+    const correctAnswer = questions[currentQuestionIndex].correctAnswer;
 
     // find the parent fieldset of the selected answer
-    /* const selectedFieldset = selectedAnswer.closest("fieldset"); */
+    const selectedFieldset = selectedAnswer.closest("fieldset");
 
-    if (userAnswer === correctAnswer) {
-      alert("Correct!");
+    // find the correct fieldset and add the green background class
+    const correctFieldset = Array.from(quizForm.querySelectorAll("input"))
+      .find((input) => input.value === correctAnswer)
+      .closest("fieldset");
 
-      // add chosen-answer active class to the fieldset for the selected answer option
-      /* selectedFieldset.classList.add("chosen-answer"); */
-    } else {
-      alert(`Wrong! The correct answer was: ${correctAnswer}`);
+    // remove selected answer classes before setting new classes
+    removeChosenAnswerClass();
+    // Immediately apply the correct answer feedback
+    correctFieldset.classList.add("correct-answer__green-bg");
 
-      /* selectedFieldset.classList.add("chosen-answer"); */
+    // if user's answer is incorrect, highlight the wrong one with red bg
+    if (userAnswer !== correctAnswer) {
+      // add the wrong answer class to the selected answer fieldset
+      selectedFieldset.classList.add("wrong-answer__red-bg");
     }
 
-    // move to the next question or end the quiz
-    currentQuetionIndex++;
-    if (currentQuetionIndex < questions.length) {
-      // remove any previously added chosen-answer classes before displaying the next question
-      removeChosenAnswerClass();
-
-      displayQuestion(currentQuetionIndex); // continue diplaying the next question
-    } else {
-      alert("Quiz finished!");
-    }
+    // Delay moving to the next question to show feedback
+    setTimeout(() => {
+      // move to the next question or end the quiz
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        removeFeedbackClasses(); // Remove feedback classes before displaying the next question
+        displayQuestion(currentQuestionIndex); // display the next question
+      } else {
+        alert("Quiz finished!"); // Quiz completed
+      }
+    }, 1500); // Show feedback for 1.5 seconds
   } else {
-    // if not selected, ask the user to select an answer option
+    // if no answer selected, ask the user to select one
     alert("Please select an answer!");
   }
 });
 
-// function to remove the chosen-answer class from all fieldset; 
-// reseting the active class after each submition
-function removeChosenAnswerClass() {
-  const allFieldsets = document.querySelectorAll('fieldset');
-  allFieldsets.forEach(fieldset => {
-    fieldset.classList.remove('chosen-answer')
-  })
+// Remove feedback classes after moving to the next question
+function removeFeedbackClasses() {
+  const allFieldsets = document.querySelectorAll("fieldset");
+  allFieldsets.forEach((fieldset) => {
+    fieldset.classList.remove(
+      "correct-answer__green-bg",
+      "wrong-answer__red-bg"
+    );
+  });
 }
+
+function removeFeedbackClasses() {
+  const allFieldsets = document.querySelectorAll("fieldset");
+  allFieldsets.forEach((fieldset) => {
+    fieldset.classList.remove(
+      "correct-answer__green-bg",
+      "wrong-answer__red-bg"
+    );
+  });
+}
+
+// function displaying next question along with its answers
+const displayQuestion = (index) => {
+  removeFeedbackClasses(); // remove old feedback before displaying new question
+  removeChosenAnswerClass();
+
+  const questionData = questions[index]; // get the current question by index
+  const answers = [
+    ...questionData.incorrectAnswers,
+    questionData.correctAnswer,
+  ]; // combine incorrect and correct answers
+
+  // shuffle the answers for randomness
+  const shuffledAnswers = answers.sort(() => Math.random() - 0.5);
+
+  // update the question text in the DOM
+  question.textContent = questionData.question;
+
+  // update the answer options
+  const answerContainers = document.querySelectorAll(
+    ".container-answers fieldset"
+  );
+
+  answerContainers.forEach((fieldset, answerIndex) => {
+    const input = fieldset.querySelector("input");
+    const label = fieldset.querySelector("label");
+
+    // Dynamically set the name attribute for the current question
+    input.name = `question${index}`;
+
+    // assign new answers and ensure the input and label reflect it
+    input.value = shuffledAnswers[answerIndex];
+    label.lastChild.textContent = ` ${shuffledAnswers[answerIndex]}`;
+
+    // Uncheck the radio buttons for the new question
+    input.checked = false;
+  });
+
+  updateQuestionCounter(index + 1, questions.length);
+};
 
 // Listen for changes to the radio buttons and apply the chosen-answer class
 quizForm.addEventListener("change", function (event) {
-  if (event.target.name === "question1") {
+  if (event.target.name === `question${currentQuestionIndex}`) {
     // Remove chosen-answer class from all fieldsets before adding it to the new one
     removeChosenAnswerClass();
 
@@ -159,4 +197,12 @@ quizForm.addEventListener("change", function (event) {
   }
 });
 
-/* getQuizData(); */
+// Function to remove the chosen-answer class from all fieldsets
+function removeChosenAnswerClass() {
+  const allFieldsets = document.querySelectorAll("fieldset");
+  allFieldsets.forEach((fieldset) => {
+    fieldset.classList.remove("chosen-answer");
+  });
+}
+
+getQuizData();

@@ -133,6 +133,12 @@ fieldset {
   padding: .8rem;
 }
 
+.correct-answer__green-bg {
+  background-color: lightgreen;
+}
+.wrong-answer__red-bg {
+  background-color: rgb(250, 100, 100);
+}
 
 
 /** media queires */
