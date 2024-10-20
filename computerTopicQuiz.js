@@ -1,6 +1,7 @@
 const question = document.querySelector(".question");
 const quizTopic = document.querySelector(".header-topic");
 const quizForm = document.querySelector("#quiz-form");
+const container = document.querySelector(".container");
 /* const answerContainers = document.querySelectorAll('.container-answers fieldset'); */
 
 let questions = [];
@@ -18,7 +19,6 @@ const getQuizData = () => {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
       return response.json(); // parse data to JSON
     })
     .then((loadedData) => {
@@ -28,10 +28,16 @@ const getQuizData = () => {
       questions = loadedData.results.map((loadedQuestionObject) => {
         console.log("loaded question: ", loadedQuestionObject);
 
-        return {
+        /* return {
           question: loadedQuestionObject.question, // store the question text
           correctAnswer: loadedQuestionObject.correct_answer, // correct answer
           incorrectAnswers: loadedQuestionObject.incorrect_answers, // incorrect answers
+        }; */
+        return {
+          question: decodeHtml(loadedQuestionObject.question), // decode right after fetching
+          correctAnswer: decodeHtml(loadedQuestionObject.correct_answer),
+          incorrectAnswers:
+            loadedQuestionObject.incorrect_answers.map(decodeHtml), // decode incorrect answers
         };
       });
 
@@ -56,6 +62,12 @@ const getQuizData = () => {
       console.log("selected 5 random questions: ", selectedQuestions);
 
       displayQuestion(currentQuestionIndex); // display the first question
+
+      // now that the questions are ready and displayed, remove the 'hidden' class
+      document.querySelector(".container").classList.remove("hidden");
+
+      startQuizTimer(); // start the total quiz timer
+      startQuestionTimer(); // start the question timer for the first question
     })
     .catch((error) => {
       console.error("Fetch error:", error); // catch and log any errors
@@ -110,8 +122,10 @@ quizForm.addEventListener("submit", function (event) {
       if (currentQuestionIndex < questions.length) {
         removeFeedbackClasses(); // Remove feedback classes before displaying the next question
         displayQuestion(currentQuestionIndex); // display the next question
+        startQuestionTimer(); // start the question timer for the next question
       } else {
         alert("Quiz finished!"); // Quiz completed
+        clearInterval(totalQuizTimer); // stop total quiz timer when quiz ends
       }
     }, 1500); // Show feedback for 1.5 seconds
   } else {
@@ -139,6 +153,13 @@ function removeFeedbackClasses() {
       "wrong-answer__red-bg"
     );
   });
+}
+
+// Helper function to decode HTML entities
+function decodeHtml(html) {
+  const textArea = document.createElement("textarea");
+  textArea.innerHTML = html;
+  return textArea.value;
 }
 
 // function displaying next question along with its answers
@@ -206,3 +227,71 @@ function removeChosenAnswerClass() {
 }
 
 getQuizData();
+
+// variables fro timers
+let questionTimer;
+let quizStartTime = null;
+let totalQuizTimer;
+
+const headerQuestionTime = document.querySelector(".header__question-time");
+const headerTotalQuizTime = document.querySelector(".header__total-quiz-time");
+
+// function to start the total quiz timer
+function startQuizTimer() {
+  quizStartTime = Date.now(); // capture the starting time
+  totalQuizTimer = setInterval(() => {
+    const elapsed = Date.now() - quizStartTime; // calculate time elapsed since quiz started
+    const seconds = Math.floor(elapsed / 1000); // convert milliseconds to seconds
+
+    // update the total quiz time in the DOM
+    headerTotalQuizTime.textContent = `Quiz total time: ${formatTime(seconds)}`;
+  }, 1000); // update every seconds
+}
+
+// function to start the question timer (for each question)
+function startQuestionTimer() {
+  let timeLeft = 60; // 60 seconds per question
+
+  // reset any existing question timer
+  if (questionTimer) clearInterval(questionTimer);
+
+  questionTimer = setInterval(() => {
+    timeLeft--; // start countdown
+
+    // update the question timer in the DOM
+    headerQuestionTime.textContent = `Question time: ${timeLeft} seconds`;
+
+    if (timeLeft <= 0) {
+      clearInterval(questionTimer); // stop timer at 0
+      /* alert("Time is up for this question!"); */
+      moveToNextQuestion();
+    }
+  }, 1000); // update every 1 second
+}
+
+// format seconds into MM:SS format for better readability
+function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`; // ensure the two digit format like; 09 seconds
+}
+
+// move to the next question - or finish the quiz if there are no more questions
+function moveToNextQuestion() {
+  currentQuestionIndex++;
+  if(currentQuestionIndex < questions.length) {
+    // reset and start question timer
+    startQuestionTimer();
+    removeFeedbackClasses()
+    displayQuestion(currentQuestionIndex);
+  } else {
+    clearInterval(totalQuizTimer);
+    alert('Quiz finished!')
+  }
+}
+
+function startQuizTimers() {
+  startQuizTimer();
+  startQuestionTimer();
+}
